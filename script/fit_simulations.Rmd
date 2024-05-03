@@ -1,3 +1,39 @@
+---
+title: "Detection and Reporting Model of Global Speceis First Record Database"
+author: "Muchen Wang"
+date: "`r Sys.Date()`"
+output: html_document
+---
+# Detection and Reporting Model of Global Species First Record Database
+
+## Introduction
+The ability to detect and report invasive species accurately and promptly is critical in managing biodiversity and preventing the adverse effects of invasions. The detection and reporting model outlined here is designed to estimate the number of new invasions of species detected and reported over time, incorporating the probabilities associated with detection delays and reporting lags. This model is particularly valuable for ecological researchers and policymakers who need to understand the dynamics of species invasions and their impacts on ecosystems.
+
+## Formula Description
+The formula for estimating the number of new invasions detected in a particular year (\( T_d \)) and reported by a subsequent year (\( T_r \)) is given by:
+
+\[ F(T_d) = \sum_{T_i = t_0}^{T_d} \left( I(T_i) \cdot \left( \prod_{j=0}^{T_d-T_i-1} (1-P_d(j)) \right) \cdot P_d(T_d-T_i) \cdot \left(1- \prod_{m=0}^{T_r-T_d} (1- P_r(m)) \right) \right) \]
+
+### Process
+- **Initial Invasion**: Accounting for invasions starting from year \( T_i \).
+- **Non-Detection Period**: The period from the year of invasion up to just before detection.
+- **Detection Year**: The specific year where detection occurs.
+- **Reporting Delay**: The delay from detection to reporting.
+
+## Variables Explanation
+- **\( T_i \)**: Year of invasion.
+- **\( T_d \)**: Year of detection.
+- **\( T_r \)**: Year of reporting.
+- **\( I(T_i) \)**: Number of invasions occurring in year \( T_i \).
+- **\( P_d(j) \)**: Probability of detecting an invasion \( j \) years after invasion.
+- **\( P_r(m) \)**: Probability of not reporting a detected invasion \( m \) years after detection.
+
+These variables collectively contribute to modeling the detection and reporting processes, enabling us to simulate and predict the dynamics of invasive species reports over time. Understanding these dynamics helps in assessing the effectiveness of monitoring systems and in improving strategies for managing invasive species.
+
+---
+
+## Initialization
+```{r message=FALSE, warning=FALSE}
 rm(list=ls());gc()
 #graphics.off()
 library(ggplot2)
@@ -10,17 +46,50 @@ library(doParallel)
 params = FALSE
 simulate = FALSE
 fit = FALSE
-prediction = TRUE
+prediction = FALSE
 plot_params = TRUE
 plot_curves = TRUE
+```
+
+## Functions
+This section defines key functions used in the simulation model, each tailored to simulate specific aspects of the invasion, detection, and reporting processes.
+
+### Invasion Growth Function
+The `invasion_growth` function models the logistic growth of species invasions.
+
+- **Parameters**:
+  - `t`: A given year.
+  - `K`: Carrying capacity, the maximum population size that the environment can sustain.
+  - `r`: Rate of increase, defining how quickly the population approaches its carrying capacity.
+  - `t_m`: The year in which the population reaches half of the carrying capacity, marking the inflection point of the logistic curve.
+  - `r_d` (currently ignored): Rate of decline post-peak invasion.
+  - `t_d` (currently ignored): The year in which the decline begins.
+
+### Sigmoid Function
+The `sigmoid_function` simulates the logistic increase in the probability of detection or reporting as the abundance of the species increases.
+
+- **Parameters**:
+  - `t`: A given year.
+  - `yoi`: Year of the invasion.
+  - `beta`: Shapes the logistic curve, affecting how the probability changes over time.
+  - `rate`: Rate of increase, determining how quickly the probability approaches 1.
+  - `p0`: A starting value, setting the initial probability before any increase.
+
+### Calculate Fb Function
+The `calculate_Fb` function estimates the number of species detected in year `a` and reported by year `b`.
+
+- **Parameters**:
+  - `t0`: Starting year of the simulation.
+  - `a`: Year of detection.
+  - `b`: Year of reporting (version of the database).
+  - `I`: Array of actual invasions from year `t0` to year `b`.
+  - `pd_beta`, `r_pd`, `pd0`: Parameters determining the probability of detection.
+  - `pr_beta`, `r_pr`, `pr0`: Parameters determining the probability of reporting.
+
+```{r}
+#Assume the growth of invasion is logistic
 invasion_growth <- function(t, K, r, t_m, r_d, t_d) {
   K / (1 + exp((-r) * (t - t_m)))
-  # if (t<t_d) {
-  #   K / (1 + exp((-r) * (t - t_m)))
-  # }else{
-  #   K / (1 + exp((-r) * (t - t_m))) - exp(r_d * (t-t_d))
-  #   #K / (1 + exp((-r) * (t - t_m))-) - exp(r_d * (t-t_d))
-  # }
 }
 
 #Simulate that the probability of detection increases logistically due to abundance
@@ -32,7 +101,7 @@ sigmoid_function <- function(t, yoi, beta, rate, p0) {
   }
 }
 
-#formula
+#Apply formula to calculate #sp detected in Td and reported by Tr 
 
 calculate_Fb <- function(a, I, pd_beta, r_pd, pr_beta, r_pr, pd0, pr0, t0, b) {
   Fb <- 0
@@ -84,6 +153,7 @@ loss <- function(params, species_count_df) {
   return(ls)
 }
 
+#Generate a dataframe that contains the years from t0 to b, predicted #sp and #actual invasions
 predict = function(params, b){
   params1=null_params
   params1[names(params)]=params
@@ -105,13 +175,13 @@ predict = function(params, b){
   # Calculate Fb_values
   Fb_values <- sapply(years, function(a) {
     Fb <- calculate_Fb(a, I, pd_beta, r_pd, pr_beta, r_pr, pd0, pr0, t0, b)
-    cat("Year:", a, "Fb:", Fb, "\n")
     return(Fb)
   })
   result = data.frame(year = years, pre = Fb_values, invasion = I)
   return(result)
 }
 
+#Plot the fitted and simulated curve from t0 to b for each simulations
 plot_pre_over_year <- function(prediction_df, results_df, index) {
   # Combine the two data frames by year
   combined_df <- merge(prediction_df, results_df, by = "year", suffixes = c("_pred", "_res"))
@@ -127,6 +197,7 @@ plot_pre_over_year <- function(prediction_df, results_df, index) {
   return(p)
 }
 
+#find the outliers in the fitted parameters
 identify_outliers <- function(x) {
   q1 <- quantile(x, 0.25)
   q3 <- quantile(x, 0.75)
@@ -135,8 +206,11 @@ identify_outliers <- function(x) {
   upper_bound <- q3 + 1.5 * iqr
   x < lower_bound | x > upper_bound
 }
+```
 
-
+## Generate Simulations
+This section generate the simulation based on the parameters randomly generated within a reasonable range.
+```{r}
 set.seed(123) # Ensure reproducibility
 n <- 40 # Number of random selections
 t0 = 1990
@@ -200,6 +274,20 @@ if (simulate){
 
 results_n = readRDS(paste0("../model_result/fit_simulation_results_", n, "_", t0, "_", lp*100, "-", hp*100, ".rds"))
 
+```
+random_params contains the combinations of parameters randomly generated to simulate the real world.
+```{r}
+random_params[[1]]
+```
+results_n contains the n number of simulated results. Each simulations contains years, number of species reported and actual invasions 
+```{r}
+results_n[[1]]
+```
+
+## Fitting
+This section examines how well the fitting process of this model is. The default method is used in optim.
+
+```{r}
 if (fit){
   init_params = c(K = 800, r = 2e-02, t_m = 1.800e+03, pd_beta = 1, r_pd = 1e-03, pd0 = 0.0050)
   # lower_bounds <- c(1, 0.000001, 0, 0.000001, 0,  -Inf, 0, 0, -Inf, 0, 0)
@@ -238,7 +326,13 @@ if (fit){
 }
 
 fitted_n = readRDS(paste0("../model_result/fit_simulation_fitted_results_", n, "_", t0, "_", lp*100, "-", hp*100, ".rds"))
-
+```
+fitted_n includes the information of the fitted parameters.
+```{r}
+fitted_n[[1]]
+```
+## plot fitted params and simulated params
+```{r}
 if (plot_params){
   # Assuming random_params is a list of lists with each inner list containing parameter values
   # Convert random_params to a dataframe
@@ -268,28 +362,37 @@ if (plot_params){
                                  cols = everything(), 
                                  names_to = c(".value", "parameter"), 
                                  names_sep = "-")
-  
-  long_params_df <- long_params_df %>%
-    group_by(parameter) %>%
-    mutate(outlier = identify_outliers(sim) | identify_outliers(fit)) %>%
-    ungroup()
-
-  long_params_df <- long_params_df %>%
-    filter(!outlier)
+  ## add these to code if the outliers need to be excluded
+  # long_params_df <- long_params_df %>%
+  #   group_by(parameter) %>%
+  #   mutate(outlier = identify_outliers(sim) | identify_outliers(fit)) %>%
+  #   ungroup()
+  # 
+  # long_params_df <- long_params_df %>%
+  #   filter(!outlier)
   
   # 'long_params_df' now has a column for 'parameter' indicating the parameter name,
   # and two columns for 'sim' and 'fit' representing the simulated and fitted values.
   # Plot simulated vs. fitted values for each parameter
-  ggplot(long_params_df, aes(x = fit, y = sim, color = parameter)) +
+  p1 = ggplot(long_params_df, aes(x = fit, y = sim, color = parameter)) +
     geom_point() +  # Add points
     geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +  # Add y=x line
     facet_wrap(~ parameter, scales = "free") +  # Create a separate plot for each parameter
     theme_bw() +
     labs(x = "Fitted Value", y = "Simulated Value", title = "Simulated vs. Fitted Values for Each Parameter") +
     theme(legend.position = "none")  # Hide legend because the facet titles already indicate the parameter
-  ggsave(paste0("../model_graph/fit_simulation_fitted_results_", n, "_", t0, "_", lp*100, "-", hp*100, ".png"), width = 10, height = 6)
+  #ggsave("../model_graph/Simulated vs. Fitted Values for Each Parameter_95-10.png")
 }
+```
 
+The results showed that parameters that determine the probability of detection **\( P_d \)** and reporting **\( P_r \)** are fitted better than the ones for "actual invasion" **\( I \)**,  especially `K` and `r`. However, the loss between the fitted and simulated curves is small shown later in the "Prediction" section. Thus, multiple combinations of the parameters can generate curves with little difference
+```{r}
+  p1
+```
+
+## Prediction
+Based on the fitted parameters, calculate the estimated number of #sp reported in each year and compare it to the simulated results.
+```{r}
 if (prediction) {
   prediction_n <- mapply(function(params, i, b) {
     # Construct the name using the index i
@@ -308,7 +411,12 @@ if (prediction) {
 }
 
 prediction_n = readRDS(paste0("../model_result/fit_simulation_predicted_results_", n, "_", t0, "_", lp*100, "-", hp*100, ".rds"))
+```
 
+```{r}
+prediction_n[[1]]
+```
+```{r}
 if (plot_curves){
   plots_list <- lapply(1:length(prediction_n), function(i) {
     prediction_df <- prediction_n[[i]][[1]]
@@ -324,5 +432,8 @@ if (plot_curves){
     ggsave(paste0("../model_graph/simulation_", n, "_", t0, "_", lp*100, "-", hp*100, "/plot_", i, ".png", sep = ""), plots_list[[i]], width = 10, height = 6)
   }
 }
+
+plots_list[1]
+```
 
 
