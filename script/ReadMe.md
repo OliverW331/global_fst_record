@@ -21,7 +21,7 @@ This repository contains all scripts used in the analysis, modeling, and simulat
 
 ### Simulation and Model Validation
 - **fit_simulations.R** & **fit_simulations.Rmd**: These scripts assess model fit by generating numerous simulations with random parameter combinations, comparing the fit of detection and reporting probability parameters versus actual invasion parameters. Results help evaluate the robustness of the model fitting process.
-- **likelihood_check.R**: Investigates the likelihood consistency within the global species invasion model when detection and reporting processes are integrated, particularly focusing on the likelihood of species being recorded or not.
+- **likelihood_check.R**: Investigates the likelihood consistency within the global species invasion model when detection and reporting processes are integrated, particularly focusing on the likelihood of species being recorded (invaded, detected and reported) or not.
 
 ## Improvements Needed
 Some scripts require optimization and enhancement:
