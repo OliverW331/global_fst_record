@@ -6,23 +6,24 @@ The ability to detect and report invasive species accurately and promptly is cri
 ## Formula Description
 The formula for estimating the number of new invasions detected in a particular year (\( T_d \)) and reported by a subsequent year (\( T_r \)) is given by:
 
-\[ F(T_d) = \sum_{T_i = t_0}^{T_d} \left( I(T_i) \cdot \left( \prod_{j=0}^{T_d-T_i-1} (1-P_d(j)) \right) \cdot P_d(T_d-T_i) \cdot \left(1- \prod_{m=0}^{T_r-T_d} (1- P_r(m)) \right) \right) \]
+F(T_d) = sum(T_i = t_0 to T_d) of (I(T_i) * (prod(j=0 to T_d-T_i-1) of (1-P_d(j))) * P_d(T_d-T_i) * (1- prod(m=0 to T_r-T_d) of (1- P_r(m))))
 
 ### Process
-- **Initial Invasion**: Accounting for invasions starting from year \( T_i \).
+- **Initial Invasion**: Accounting for invasions starting from year T_i.
 - **Non-Detection Period**: The period from the year of invasion up to just before detection.
 - **Detection Year**: The specific year where detection occurs.
 - **Reporting Delay**: The delay from detection to reporting.
 
 ## Variables Explanation
-- **\( T_i \)**: Year of invasion.
-- **\( T_d \)**: Year of detection.
-- **\( T_r \)**: Year of reporting.
-- **\( I(T_i) \)**: Number of invasions occurring in year \( T_i \).
-- **\( P_d(j) \)**: Probability of detecting an invasion \( j \) years after invasion.
-- **\( P_r(m) \)**: Probability of not reporting a detected invasion \( m \) years after detection.
+- **T_i**: Year of invasion.
+- **T_d**: Year of detection.
+- **T_r**: Year of reporting.
+- **I(T_i)**: Number of invasions occurring in year T_i.
+- **P_d(j)**: Probability of detecting an invasion j years after it occurs.
+- **P_r(m)**: Probability of not reporting a detected invasion m years after detection.
 
 These variables collectively contribute to modeling the detection and reporting processes, enabling us to simulate and predict the dynamics of invasive species reports over time. Understanding these dynamics helps in assessing the effectiveness of monitoring systems and in improving strategies for managing invasive species.
+
 
 ## Repositories Description
 
