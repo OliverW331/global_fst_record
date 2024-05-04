@@ -26,7 +26,7 @@ This repository contains all scripts used in the analysis, modeling, and simulat
 ## Improvements Needed
 Some scripts require optimization and enhancement:
 - **Parallelization**: Certain scripts are not yet parallelized, which could improve their efficiency and reduce runtime.
-- **Sensitivity Analysis Range**: The selection ranges for sensitivity analysis need refinement to better demonstrate correlations and to enhance the interpretability of the findings.
+- **Sensitivity Analysis Range**: The selection ranges for sensitivity analysis need refinement to better demonstrate correlations and to enhance the interpretability of the findings. For example, although the correlation between slopes of difference and slopes of invasion from 1995 to 2016 is not strong, a negative or zero slope of difference occurs much more frequently when the slope of invasion is negative. The ranges for each parameter used to conduct sensitivity analysis and the function for invasion_growth need to be examined since we need to make sure the number of species recorded is always positive (which means that the rate of decline cannot be too large). Before conducting the sensitivity analysis, I should check if there is any anomaly with the combinations of parameters.
 
 ## Usage
 To run these scripts, ensure you have R installed along with necessary libraries such as `ggplot2`, `dplyr`, `tidyr`, `gridExtra`, `foreach`, and `doParallel`. Adjust parameters and paths as needed for your specific setup.
