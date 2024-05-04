@@ -60,7 +60,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 Thanks to all contributors and researchers who have provided insights and feedback on the models and analyses.
 
 ## Contact
-For any inquiries, please contact [Your Name or Project Email].
+For any inquiries, please contact [Muchen Wang].
 
 ---
 
