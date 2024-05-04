@@ -10,7 +10,7 @@ library(doParallel)
 params = FALSE
 simulate = FALSE
 fit = FALSE
-prediction = TRUE
+prediction = FALSE
 plot_params = TRUE
 plot_curves = TRUE
 invasion_growth <- function(t, K, r, t_m, r_d, t_d) {

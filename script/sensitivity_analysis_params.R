@@ -58,7 +58,7 @@ baseline_params <- list(K = 1.000001e+03,
                         pr_beta = 1.368035e+00,
                         r_pr = 1.438073e-02,
                         pr0 = 8.712529e-03,
-                        t0 = 1600, 
+                        t0 = 1995, 
                         b = 2016)
 
 results_list<- list()
@@ -170,7 +170,7 @@ results_list$pr0 <- results_pr0
 saveRDS(results_list, "../model_result/sensitivity_analysis_results_list.rds")
 
 
-if (0) {
+if (1) {
   ###Plot How F Varies with different K###
   results_list = readRDS("../model_result/sensitivity_analysis_results_list.rds")
   combined_df <- do.call(rbind, lapply(names(results_list$K), function(k_name) {
